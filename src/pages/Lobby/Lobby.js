@@ -47,7 +47,19 @@ class Lobby extends Component {
     }
 
     joinGame() {
-        firebase.database().ref()
+        firebase.database().ref('/games').once('value')
+        .then(snap => {
+            const list = snap.val()
+            for(const game in list) {
+                if(list[game].key === this.state.gameCode) {
+                    localStorage['firebaseKey'] = game
+                    
+                    firebase.database().ref('/games/' + game +'/players').push({
+                        playerID: list[game].players.length
+                    })
+                }
+            } 
+        })
     }
 
     getData() {
@@ -60,28 +72,33 @@ class Lobby extends Component {
                 arr.push(list[game])
 
             this.setState({
-                games: arr
+                games: arr,
             })
         })
 
     }
 
     makeNewGame() {
-
-
             let code = this.generateCode()
             while(!this.checkCode(code)) code = this.generateCode()
 
             firebase.database().ref('/games').push({
                 key: code,
-                players: []
+                players: [
+                    {
+                        playerID: 0,
+                        responses: []
+                    }
+                ]
+            }).then(() => {
+                this.setState({
+                    gameCode: code,
+                    host: true,
+                    playerId: 0
+                })
+                localStorage['gameCode'] = code
+                localStorage['timeStamp'] = new Date().toJSON()
             })
-            this.setState({
-                gameCode: code,
-                host: true,
-            })
-            localStorage['gameCode'] = code
-            localStorage['timeStamp'] = new Date().toJSON()
 
     }
 

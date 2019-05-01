@@ -10,20 +10,25 @@ import Results from './pages/Results/Results'
 import firebase from './firebase'
 
 class App extends Component {
-
     constructor(props) {
       super(props);
       this.state = {  }
+
+      this.reroute = this.reroute.bind(this)
+  }
+
+  reroute() {
+    //this.props.history.push('/lobby?code=' + localStorage['gameCode'])
   }
 
   checkGame() {
-    const self = this
     if(localStorage['gameCode']) {
         firebase.database().ref('/games').once('value')
         .then(snap => {
           const list = snap.val()
-          for(const game in list) 
-            if(list[game].key === localStorage['gameCode']) self.props.history.push('/lobby?code=' + localStorage['gameCode'])
+          for(const game in list) {
+            if(list[game].key === localStorage['gameCode']) this.reroute()
+          }
         })
       }
 }
