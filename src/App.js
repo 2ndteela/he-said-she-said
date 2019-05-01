@@ -1,13 +1,38 @@
-import React from 'react';
+import React, {Component} from 'react';
 import {BrowserRouter as Router, Route } from 'react-router-dom'
+
 
 import Home from './pages/Home/Home'
 import EndScreen from './pages/EndScreen/EndScreen.js'
 import Lobby from './pages/Lobby/Lobby'
 import Play from './pages/Play/play'
 import Results from './pages/Results/Results'
+import firebase from './firebase'
 
-function App() {
+class App extends Component {
+
+    constructor(props) {
+      super(props);
+      this.state = {  }
+  }
+
+  checkGame() {
+    const self = this
+    if(localStorage['gameCode']) {
+        firebase.database().ref('/games').once('value')
+        .then(snap => {
+          const list = snap.val()
+          for(const game in list) 
+            if(list[game].key === localStorage['gameCode']) self.props.history.push('/lobby?code=' + localStorage['gameCode'])
+        })
+      }
+}
+
+componentDidMount() {
+  this.checkGame()
+}
+
+  render() {
   return (
     <div className="App">
       <Router>
@@ -21,6 +46,7 @@ function App() {
       </Router>
     </div>
   );
+  }
 }
 
 export default App;

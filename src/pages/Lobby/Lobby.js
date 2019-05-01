@@ -21,62 +21,23 @@ class Lobby extends Component {
         let gameCode = ''
 
         for(let i = 0; i < 4; i++) gameCode += LETTERS[Math.floor(Math.random() * 25) ]
-
         return gameCode
     }
 
-    checkCode(code, arr) {
-        arr.forEach(game => {
+    checkCode(code) {
+        this.state.games.forEach(game => {
             if(game.key === code) return false
         })
 
         return true
     }
 
-    getData() {
-        firebase.database().ref('/games').once('value')
-        .then(snap => {
-            const list = snap.val()
-            let arr = []
-            for(const game in list) 
-                arr.push(list[game])
-
-            let code = this.generateCode()
-            while(!this.checkCode(code, arr)) code = this.generateCode()
-
-            if(!localStorage['gameCode']) {
-                firebase.database().ref('/games').push({
-                    key: code,
-                    players: []
-                })
-                this.setState({
-                    games: arr,
-                    gameCode: code,
-                    host: true,
-                })
-                localStorage['gameCode'] = code
-                localStorage['timeStamp'] = new Date().toJSON()
-            }
-            else {
-                const NOW = new Date()
-                const old = new Date(localStorage['timeStamp'])
-                const diff = NOW - old
-                const TENMINS = 1000 * 60 * 10
-
-                if(diff > TENMINS) console.log('old')
-                else  { 
-                    console.log('fine')
-                    code = localStorage['gameCode']
-                }
-            }
-        })
-    }
-
     componentDidMount() {
+        this.getData()
         const temp = queryString.parse(window.location.search)
       
       if(temp.host)      
-        this.getData()
+        this.makeNewGame()
     }
 
     handleUpdate(value, field) {
@@ -87,6 +48,41 @@ class Lobby extends Component {
 
     joinGame() {
         firebase.database().ref()
+    }
+
+    getData() {
+
+        firebase.database().ref('/games').once('value')
+        .then(snap => {
+            const list = snap.val()
+            let arr = []
+            for(const game in list) 
+                arr.push(list[game])
+
+            this.setState({
+                games: arr
+            })
+        })
+
+    }
+
+    makeNewGame() {
+
+
+            let code = this.generateCode()
+            while(!this.checkCode(code)) code = this.generateCode()
+
+            firebase.database().ref('/games').push({
+                key: code,
+                players: []
+            })
+            this.setState({
+                gameCode: code,
+                host: true,
+            })
+            localStorage['gameCode'] = code
+            localStorage['timeStamp'] = new Date().toJSON()
+
     }
 
     makeBody() {
