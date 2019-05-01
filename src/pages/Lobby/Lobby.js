@@ -49,6 +49,13 @@ class Lobby extends Component {
                     key: code,
                     players: []
                 })
+                this.setState({
+                    games: arr,
+                    gameCode: code,
+                    host: true,
+                })
+                localStorage['gameCode'] = code
+                localStorage['timeStamp'] = new Date().toJSON()
             }
             else {
                 const NOW = new Date()
@@ -62,14 +69,6 @@ class Lobby extends Component {
                     code = localStorage['gameCode']
                 }
             }
-
-            this.setState({
-                games: arr,
-                gameCode: code,
-                host: true,
-            })
-            localStorage['gameCode'] = code
-            localStorage['timeStamp'] = new Date().toJSON()
         })
     }
 
