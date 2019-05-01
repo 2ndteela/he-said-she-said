@@ -9,9 +9,10 @@ class Lobby extends Component {
         this.state = { 
             gameCode: '',
             host: false,
-            players: [],
+            players: 1,
             games: [],
-            firebaseKey: ''
+            firebaseKey: '',
+            joined: false
          }
          this.handleUpdate = this.handleUpdate.bind(this)
     }
@@ -41,6 +42,7 @@ class Lobby extends Component {
     }
 
     handleUpdate(value, field) {
+        if(field === 'gameCode') value = value.toUpperCase()
         this.setState({
             [field]: value
         })
@@ -51,7 +53,7 @@ class Lobby extends Component {
         .then(snap => {
             const list = snap.val()
             for(const game in list) {
-                if(game === this.state.gameCode) {
+                if(game === this.state.gameCode.toUpperCase()) {
                     localStorage['gameCode'] = game
                     let i = 0
 
@@ -60,9 +62,34 @@ class Lobby extends Component {
                     firebase.database().ref('/games/' + game + '/' + i).set({
                         name: 'Story ' + i
                     })
+
+                    firebase.database().ref('/games/' + game + '/').on('value', snap => {
+                        const list = snap.val()
+
+                        if(list.started) this.props.history.push('/play')
+
+                        let count = 0 
+                        for(const i in list) count++
+
+                        this.setState({
+                            players: count
+                        })
+                    })
+
+                    this.setState({
+                        joined: true
+                    })
                 }
             } 
         })
+    }
+
+    startGame() {
+        firebase.database().ref('/games/' + localStorage['gameCode']).set({
+            started: true
+        })
+
+        this.props.history.push('/play')
     }
 
     getData() {
@@ -75,7 +102,7 @@ class Lobby extends Component {
                 arr.push(list[game])
 
             this.setState({
-                games: arr,
+                games: arr
             })
         })
 
@@ -104,17 +131,25 @@ class Lobby extends Component {
             <div className="page-content center-up">
                 <h2>Game Code: {this.state.gameCode} </h2>
                 <div>Just wait a moment while your friends join</div>
-                <div style={{padding: '16px 0'}}>Number of players: {this.state.players.length}</div>
-                <button>Start Game</button>
+                <div style={{padding: '16px 0'}}>Number of players: {this.state.players}</div>
+                <button onClick={() => this.startGame()} >Start Game</button>
             </div>
             )
 
+        }
+        else if(!this.state.host && this.state.joined) {
+            return (
+                <div>
+                    <div>Waiting for the host to start the game</div>
+                    <h3>{this.state.players} Players</h3>
+                </div>
+            )
         }
         return (
             <div className="page-content center-up">
                 <Input val={this.state.gameCode} field={'gameCode'} onUpdate={this.handleUpdate} label='Game Code' ></Input>
                 <div style={{width: '100%', justifyContent: 'flex-start', alignItems: 'flex-start'}}>
-                    <button style={{marginTop: '8px'}} className="inverse-button" onClick={this.joinGame()} >Join</button>
+                    <button style={{marginTop: '8px'}} className="inverse-button" onClick={() => this.joinGame()} >Join</button>
                 </div>
             </div>
         )
