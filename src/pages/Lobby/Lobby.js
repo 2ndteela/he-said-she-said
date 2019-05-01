@@ -51,11 +51,14 @@ class Lobby extends Component {
         .then(snap => {
             const list = snap.val()
             for(const game in list) {
-                if(list[game].key === this.state.gameCode) {
-                    localStorage['firebaseKey'] = game
-                    
-                    firebase.database().ref('/games/' + game +'/players').push({
-                        playerID: list[game].players.length
+                if(game === this.state.gameCode) {
+                    localStorage['gameCode'] = game
+                    let i = 0
+
+                    for(const story in list[game]) i++
+
+                    firebase.database().ref('/games/' + game + '/' + i).set({
+                        name: 'Story ' + i
                     })
                 }
             } 
@@ -82,23 +85,16 @@ class Lobby extends Component {
             let code = this.generateCode()
             while(!this.checkCode(code)) code = this.generateCode()
 
-            firebase.database().ref('/games').push({
-                key: code,
-                players: [
-                    {
-                        playerID: 0,
-                        responses: []
-                    }
-                ]
-            }).then(() => {
+            firebase.database().ref('/games/' + code + '/0').set({
+                name: 'Story 0'
+            })
+
                 this.setState({
                     gameCode: code,
                     host: true,
                     playerId: 0
                 })
                 localStorage['gameCode'] = code
-                localStorage['timeStamp'] = new Date().toJSON()
-            })
 
     }
 
