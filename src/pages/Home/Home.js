@@ -8,10 +8,11 @@ class Home extends Component {
         this.state = {  }
 
         this.update = this.update.bind(this)
+        this.reroute = this.reroute.bind(this)
     }
 
     reroute() {
-        console.log()
+        console.log(this)
       }
     
       checkGame() {

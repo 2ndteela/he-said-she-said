@@ -11,12 +11,10 @@ class App extends Component {
     constructor(props) {
       super(props);
       this.state = {  }
-
-      this.reroute = this.reroute.bind(this)
   }
 
 componentDidMount() {
-  this.checkGame()
+  //this.checkGame()
 }
 
   render() {
