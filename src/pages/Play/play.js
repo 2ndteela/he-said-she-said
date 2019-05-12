@@ -11,7 +11,8 @@ class Play extends Component {
             response: '',
             values: ['him', 'her', 'where', 'what', 'heOne', 'sheOne', 'heTwo', 'sheTwo', 'moral', 'hashtag'],
             tutorial: true,
-            submissions: 0
+            submissions: 0,
+            showEnd: false
          }
 
          this.submitResult = this.submitResult.bind(this)
@@ -20,31 +21,47 @@ class Play extends Component {
 
     componentDidMount() {
         const game = localStorage['gameCode']
+        const ref = firebase.database().ref('/games/' + game + '/submissions')
+        
+        ref.on('value', snap => {
 
-        this.setState({
-            idx: localStorage['playerId'],
-        })
-        firebase.database().ref('/games/' + game + '/submissions').on('value', snap => {
+            if(parseInt(snap.val(), 10) === parseInt(this.state.maxCount, 10)) {
+                if(this.state.stage === 9) {
+                    this.setState({
+                        showEnd: true
+                    })
+                }
+                else {
 
-            if(snap.val() === this.state.maxCount) {
+                    this.setState({
+                        submissions: 0,
+                        submitted: false,
+                        didReset: true
+                    }, () => { ref.set(0) })
+                }
+            }
+
+            else if (this.state.didReset) 
                 this.setState({
-                    submissions: 0,
+                    didReset: false,
                     submitted: false
                 })
 
-                //add code to reset submission in db to 0
-            }
-
-            this.setState({
-                submissions: snap.val()
-            })
+            else
+            this.setState({ submissions: snap.val() })
         })
 
-        firebase.database().ref('/games/' + game + '/count').once('value')
+        firebase.database().ref('/games/' + game + '/').once('value')
         .then(snap => {
-            console.log(snap.val(), game)
+
+            let arr = []
+            for(let idx in snap.val().stories) 
+                arr.push(idx)
+
             this.setState({
-                maxCount: snap.val()
+                maxCount: parseInt(snap.val().count, 10),
+                keys: arr,
+                currentKey: localStorage['playerId']
             })
         })
     }
@@ -59,19 +76,36 @@ class Play extends Component {
         if(this.state.stage === 5) return <h3>How does the girl respond?</h3>
         if(this.state.stage === 6) return <h3>Now the guy again</h3>
         if(this.state.stage === 7) return <h3>And the girl one more time</h3>
-        if(this.state.stage === 8) return <h3>What's the moral of the story?</h3>
+        if(this.state.stage === 8) return <h3>What's the moral of the story? (And so we see...) </h3>
         if(this.state.stage === 9) return <h3>And finish it with a hashtag</h3>
         if(this.state.stage === 10) return <h3>That's it! Sit back and relax</h3>
     }
 
     makeInput() {
         if(this.state.submitted) return null
+        else if (this.state.stage === 10)   return null
         return (
             <div style={{width: '100%', alignItems: 'flex-start'}}>                    
                 <Input field="response" val={this.state.response} onUpdate={this.updateState} />
                 <button style={{marginTop: '16px'}} onClick={() => this.submitResult()} >Submit</button>
             </div>
         )
+    }
+
+    goHome() {
+        localStorage['gameCode'] = ''
+        localStorage['playerId'] = ''
+
+        this.props.history.push('/')
+    }
+
+    endButton() {
+        if(this.state.showEnd) return (
+            <div id="end-button">
+                <button onClick={() => this.props.history.push('/results')} >Show My Story!</button>
+            </div>
+        )
+        return null
     }
 
     updateState(val, field) {
@@ -83,16 +117,35 @@ class Play extends Component {
     submitResult() {
         const game = localStorage['gameCode']
 
-        firebase.database().ref('/games/' + game + '/' + this.state.idx + '/' + this.state.idx).set(this.state.response)
         firebase.database().ref('/games/' + game + '/submissions').set(parseInt(this.state.submissions, 10) + 1)
 
-        //add code to update story and rotate to the next key
+        firebase.database().ref('/games/' + game + '/stories/' + this.state.currentKey + '/' + this.state.values[this.state.stage])
+        .set(this.state.response)
 
         this.setState({
             submitted: true,
             response: '',
             stage: this.state.stage > 9 ? this.state.stage : this.state.stage + 1
         })
+
+        if(this.state.currentKey === this.state.keys[this.state.keys.length - 1]) 
+            this.setState({
+                currentKey: this.state.keys[0],
+            })
+        
+        else {
+            const idx = this.state.keys.indexOf(this.state.currentKey)
+            this.setState({
+                currentKey: this.state.keys[idx + 1]
+            })
+        }
+    }
+
+
+    componentWillUnmount() {
+        if(localStorage['isHost']) {
+            firebase.database().ref('/games/' + localStorage['gameCode'] + '/status').remove()
+        }
     }
 
     render() { 
@@ -111,13 +164,12 @@ class Play extends Component {
 
         return ( 
             <div>
+                <button className="inverse-button exit-button" onClick={() => this.goHome()} >Exit</button>
                 <h2 className="header">Play</h2>
                 <div className="page-content">
                     {this.makePrompt()}
                     {this.makeInput()}
-                    {this.state.submissions}
-                    {this.state.idx}
-                    {this.state.maxCount}
+                    {this.endButton()}
                 </div>
             </div>
          );

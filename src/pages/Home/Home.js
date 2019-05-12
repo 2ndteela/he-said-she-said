@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import './style.css'
-import firebase from '../../firebase'
+//import firebase from '../../firebase'
 
 class Home extends Component {
     constructor(props) {
@@ -8,22 +8,6 @@ class Home extends Component {
         this.state = {  }
 
         this.update = this.update.bind(this)
-        this.reroute = this.reroute.bind(this)
-    }
-
-    reroute() {
-        console.log(this)
-      }
-    
-      checkGame() {
-        if(localStorage['gameCode']) {
-            firebase.database().ref('/games/' + localStorage['gameCode'] ).once('value')
-            .then(snap => {
-              if(snap.val()) {
-                if(snap.val().started) this.reroute()
-              }
-            })
-          }
     }
 
     update(value, field) {
@@ -33,10 +17,12 @@ class Home extends Component {
     }
 
     isHost() {
+        localStorage['isHost'] = true
         this.props.history.push('/lobby?host=true')
     }
 
     notHost() {
+        localStorage['isHost'] = false
         this.props.history.push('/lobby')
     }
 

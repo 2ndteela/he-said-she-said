@@ -68,3 +68,9 @@ button:hover {
   margin: 0;
   height: 64px;
 }
+
+.exit-button {
+  position: fixed;
+  top: 16px;
+  left: 0px;
+}

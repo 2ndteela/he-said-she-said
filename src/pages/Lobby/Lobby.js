@@ -200,10 +200,13 @@ class Lobby extends Component {
                 <Input val={this.state.gameCode} field={'gameCode'} onUpdate={this.handleUpdate} label='Game Code' ></Input>
                 <div style={{width: '100%', justifyContent: 'flex-start', alignItems: 'flex-start'}}>
                     <button style={{marginTop: '8px'}} className="inverse-button" onClick={() => this.joinGame()} >Join</button>
-                    {this.state.gameCode}
                 </div>
             </div>
         )
+    }
+
+    componentWillUnmount() {
+        firebase.database().ref('/games/').off()
     }
 
     render() { 

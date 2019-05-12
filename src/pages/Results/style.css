@@ -1,0 +1,36 @@
+b { 
+    padding-right: 4px;
+}
+
+.story-body div {
+    display: inline-block;
+    width: 100%;
+}
+
+.story-body div * {
+    display: inline-block;
+}
+
+.story-intro {
+    padding-bottom: 16px;
+}
+
+.conversation-box {
+    flex-direction: column;
+    padding-bottom: 8px;
+}
+
+.conversation-box div {
+    padding-bottom: 8px;
+}
+
+#moral-box {
+    display: inline-block;
+    padding-bottom: 16px;
+}
+
+#moral-box span {
+    display: inline-block;
+    width: 100%;
+    flex-direction: row;
+}
