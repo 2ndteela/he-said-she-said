@@ -21,34 +21,14 @@ class Play extends Component {
 
     componentDidMount() {
         const game = localStorage['gameCode']
-        const ref = firebase.database().ref('/games/' + game + '/submissions')
+        const ref = firebase.database().ref('/games/' + game + '/nextRound')
         
         ref.on('value', snap => {
-
-            if(parseInt(snap.val(), 10) === parseInt(this.state.maxCount, 10)) {
-                if(this.state.stage === 9) {
-                    this.setState({
-                        showEnd: true
-                    })
-                }
-                else {
-
-                    this.setState({
-                        submissions: 0,
-                        submitted: false,
-                        didReset: true
-                    }, () => { ref.set(0) })
-                }
+            if(snap.val()) {
+                this.setState({ submitted: false })
+                if(this.state.stage === 10) this.setState({ showEnd: true})
             }
-
-            else if (this.state.didReset) 
-                this.setState({
-                    didReset: false,
-                    submitted: false
-                })
-
-            else
-            this.setState({ submissions: snap.val() })
+            
         })
 
         firebase.database().ref('/games/' + game + '/').once('value')
@@ -84,6 +64,11 @@ class Play extends Component {
     makeInput() {
         if(this.state.submitted) return null
         else if (this.state.stage === 10)   return null
+        else if (!this.state.response) return(
+            <div style={{width: '100%', alignItems: 'flex-start'}}>                    
+            <Input field="response" val={this.state.response} onUpdate={this.updateState} />
+        </div>
+        )
         return (
             <div style={{width: '100%', alignItems: 'flex-start'}}>                    
                 <Input field="response" val={this.state.response} onUpdate={this.updateState} />
@@ -116,29 +101,52 @@ class Play extends Component {
 
     submitResult() {
         const game = localStorage['gameCode']
+        const ref = firebase.database().ref('/games/' + game + '/nextRound')
 
-        firebase.database().ref('/games/' + game + '/submissions').set(parseInt(this.state.submissions, 10) + 1)
+        ref.once('value').then(snap => {
+            if(snap.val()) ref.set(false)
+        })
 
         firebase.database().ref('/games/' + game + '/stories/' + this.state.currentKey + '/' + this.state.values[this.state.stage])
         .set(this.state.response)
 
-        this.setState({
-            submitted: true,
-            response: '',
-            stage: this.state.stage > 9 ? this.state.stage : this.state.stage + 1
-        })
+        firebase.database().ref('/games/' + game + '/stories/').once('value')
+        .then(snap => {
+            const stories = snap.val()
+            let allSubmitted = true
 
-        if(this.state.currentKey === this.state.keys[this.state.keys.length - 1]) 
-            this.setState({
-                currentKey: this.state.keys[0],
+            stories.forEach(s => {
+                if(!s[this.state.values[this.state.stage]]) {
+                    console.log('false')
+                    allSubmitted = false
+                }
             })
-        
-        else {
-            const idx = this.state.keys.indexOf(this.state.currentKey)
+
+            if(allSubmitted) {
+                ref.set(true)
+                if(this.state.stage === 10) this.setState({ showEnd: true })
+            }
+            else this.setState({submitted: true})
+
             this.setState({
-                currentKey: this.state.keys[idx + 1]
+                response: '',
+                stage: this.state.stage > 9 ? this.state.stage : this.state.stage + 1
             })
-        }
+    
+            if(this.state.currentKey === this.state.keys[this.state.keys.length - 1]) 
+                this.setState({
+                    currentKey: this.state.keys[0],
+                })
+            
+            else {
+                const idx = this.state.keys.indexOf(this.state.currentKey)
+                this.setState({
+                    currentKey: this.state.keys[idx + 1]
+                })
+            }
+
+
+        })
     }
 
 

@@ -14,7 +14,6 @@ class Results extends Component {
 
         const game = localStorage['gameCode']
         const idx = localStorage['playerId']
-        console.log(game, idx)
 
         firebase.database().ref(`/games/${game}/stories/${idx}`).once('value')
         .then(snap => {
@@ -33,7 +32,7 @@ class Results extends Component {
     render() { 
         return ( 
             <div style={{width: '100%'}} >
-                <button className="inverse-button exit-button" onClick={() => this.goHome()} >Exit</button>
+                <button className="inverse-button exit-button" onClick={() => this.goHome()} >New Game</button>
                 <h1 className="header">Results</h1>
                 <div className="page-content story-body">
                     <div className="story-intro" ><b>{this.state.story.him}</b> and <b>{this.state.story.her}</b> are at <b>{this.state.story.where}</b> <b>{this.state.story.what}</b> when <b>{this.state.story.him}</b> says:</div>
