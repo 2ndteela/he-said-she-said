@@ -22,9 +22,7 @@ class Play extends Component {
     componentDidMount() {
         const game = localStorage['gameCode']
         const ref = firebase.database().ref('/games/' + game + '/nextRound')
-
-        if(localStorage['currentKey']) this.setState({ stage: parseInt(localStorage['currentKey'], 10)})
-        
+         
         ref.on('value', snap => {
             if(snap.val()) {
                 this.setState({ submitted: false })
@@ -40,11 +38,27 @@ class Play extends Component {
             for(let idx in snap.val().stories) 
                 arr.push(idx)
 
-            this.setState({
-                maxCount: parseInt(snap.val().count, 10),
-                keys: arr,
-                currentKey: localStorage['playerId']
-            })
+                this.setState({
+                    maxCount: parseInt(snap.val().count, 10),
+                    keys: arr,
+                    currentKey: localStorage['playerId']
+                }, () => {
+                    
+                    if(localStorage['currentKey']) {
+                        const resetStage = parseInt(localStorage['currentKey'], 10)
+                        let startingKey = this.state.keys[localStorage['playerId']]
+                        for(let i = 0; i < resetStage; i++) {
+                            if(startingKey === this.state.keys[this.state.keys.length - 1]) startingKey = this.state.keys[0]
+
+                            else {
+                                const idx = this.state.keys.indexOf(this.state.currentKey)
+                                startingKey = this.state.keys[idx + 1]
+                            }
+                        }
+            
+                        this.setState({ stage: resetStage})
+                    }
+                })
         })
     }
 

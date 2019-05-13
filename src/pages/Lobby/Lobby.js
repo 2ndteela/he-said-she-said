@@ -36,7 +36,7 @@ class Lobby extends Component {
     componentDidMount() {
         this.getData()
         const temp = queryString.parse(window.location.search)
-        const code =localStorage['gameCode']
+        const code = localStorage['gameCode']
       
       if(temp.host)      
         this.makeNewGame()
@@ -44,6 +44,7 @@ class Lobby extends Component {
         if(code) {
             firebase.database().ref('/games/' + localStorage['gameCode']).once('value')
             .then(snap => {
+                console.log(snap.val())
                 if(snap.val()) {
                     if(snap.val().status === 'lobby') {
                         this.setState({
@@ -81,15 +82,14 @@ class Lobby extends Component {
                     }
 
                     i++
-
                     localStorage['playerId'] = i
+                    localStorage['currentKey'] = 0
 
                     firebase.database().ref('/games/' + game + '/stories/' + i).set({
                         name: 'Story ' + i
                     })
 
                     this.subscribe()
-
                     this.setState({
                         joined: true
                     })
@@ -119,13 +119,11 @@ class Lobby extends Component {
     startGame() {
         firebase.database().ref('/games/' + localStorage['gameCode'] + '/count' ).set(this.state.players)
         firebase.database().ref('/games/' + localStorage['gameCode'] + '/status' ).set('playing')
-        firebase.database().ref('/games/' + localStorage['gameCode'] + '/submissions' ).set(0)
 
         this.props.history.push('/play')
     }
 
     getData() {
-
         firebase.database().ref('/games').once('value')
         .then(snap => {
             const list = snap.val()
