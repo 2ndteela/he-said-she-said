@@ -22,6 +22,8 @@ class Play extends Component {
     componentDidMount() {
         const game = localStorage['gameCode']
         const ref = firebase.database().ref('/games/' + game + '/nextRound')
+
+        if(localStorage['currentKey']) this.setState({ stage: parseInt(localStorage['currentKey'], 10)})
         
         ref.on('value', snap => {
             if(snap.val()) {
@@ -80,6 +82,7 @@ class Play extends Component {
     goHome() {
         localStorage['gameCode'] = ''
         localStorage['playerId'] = ''
+        localStorage['currentKey'] = ''
 
         this.props.history.push('/')
     }
@@ -131,21 +134,19 @@ class Play extends Component {
             this.setState({
                 response: '',
                 stage: this.state.stage > 9 ? this.state.stage : this.state.stage + 1
-            })
+            }, () => { localStorage['currentKey'] = this.state.stage} )
     
             if(this.state.currentKey === this.state.keys[this.state.keys.length - 1]) 
                 this.setState({
                     currentKey: this.state.keys[0],
-                })
+                }, () => { localStorage['currentKey'] = this.state.stage})
             
             else {
                 const idx = this.state.keys.indexOf(this.state.currentKey)
                 this.setState({
                     currentKey: this.state.keys[idx + 1]
-                })
+                }, () => { localStorage['currentKey'] = this.state.stage} )
             }
-
-
         })
     }
 

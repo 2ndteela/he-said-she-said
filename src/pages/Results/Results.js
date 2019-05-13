@@ -21,6 +21,8 @@ class Results extends Component {
                 story: snap.val()
             })
         })
+
+        firebase.database().ref(`/games/${game}/status`).set('end')
     }
     goHome() {
         localStorage['gameCode'] = ''
