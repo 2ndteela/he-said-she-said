@@ -12,7 +12,8 @@ class Lobby extends Component {
             players: 1,
             games: [],
             firebaseKey: '',
-            joined: false
+            joined: false,
+            checking: true
          }
          this.handleUpdate = this.handleUpdate.bind(this)
     }
@@ -44,9 +45,9 @@ class Lobby extends Component {
         if(code) {
             firebase.database().ref('/games/' + localStorage['gameCode']).once('value')
             .then(snap => {
-                console.log(snap.val())
                 if(snap.val()) {
                     if(snap.val().status === 'lobby') {
+                        this.setState({checking: false})
                         this.setState({
                             joined: true
                         })
@@ -54,9 +55,11 @@ class Lobby extends Component {
                     else if(snap.val().status === 'playing') {
                         this.props.history.push('/play')
                     }
-                } 
+                    else this.setState({checking: false})
+                }      
             })
         }
+        else this.setState({checking: false})
     }
 
     handleUpdate(value, field) {
@@ -67,6 +70,17 @@ class Lobby extends Component {
     }
 
     joinGame() {
+
+        if(!this.state.gameCode) {
+            alert("You're missing a game code")
+            return
+        }
+
+        // if(!this.state.screenName) {
+        //     alert("You're missing a screen name")
+        //     return
+        // }
+
         firebase.database().ref('/games').once('value')
         .then(snap => {
             const list = snap.val()
@@ -159,6 +173,7 @@ class Lobby extends Component {
 
         localStorage['gameCode'] = code
         localStorage['playerId'] = 0
+        localStorage['currentKey'] = 0
             
         this.subscribe()
     }
@@ -184,6 +199,15 @@ class Lobby extends Component {
             )
 
         }
+
+        if(this.state.checking === true) {
+            return( 
+                <div className="page-content center-up">
+                    <h2>Let's see if your last game is still going...</h2>
+                </div>
+            )
+        }
+
         else if(!this.state.host && this.state.joined) {
             return (
                 <div className="page-content center-up">
@@ -195,7 +219,8 @@ class Lobby extends Component {
         }
         return (
             <div className="page-content center-up">
-                <Input val={this.state.gameCode} field={'gameCode'} onUpdate={this.handleUpdate} label='Game Code' ></Input>
+                {/* <Input val={this.state.screenName} field={'screenName'} onUpdate={this.handleUpdate} label='Screen Name' ></Input> */}
+                <Input val={this.state.gameCode} field={'gameCode'} onUpdate={this.handleUpdate} label='Game Code'></Input>
                 <div style={{width: '100%', justifyContent: 'flex-start', alignItems: 'flex-start'}}>
                     <button style={{marginTop: '8px'}} className="inverse-button" onClick={() => this.joinGame()} >Join</button>
                 </div>

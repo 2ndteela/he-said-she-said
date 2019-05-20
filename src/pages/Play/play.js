@@ -45,8 +45,10 @@ class Play extends Component {
                 }, () => {
                     
                     if(localStorage['currentKey']) {
+                        this.setState({tutorial: false})
                         const resetStage = parseInt(localStorage['currentKey'], 10)
                         let startingKey = this.state.keys[localStorage['playerId']]
+                        
                         for(let i = 0; i < resetStage; i++) {
                             if(startingKey === this.state.keys[this.state.keys.length - 1]) startingKey = this.state.keys[0]
 
@@ -56,7 +58,10 @@ class Play extends Component {
                             }
                         }
             
-                        this.setState({ stage: resetStage})
+                        this.setState({ 
+                            stage: resetStage,
+                            currentKey: startingKey
+                        })
                     }
                 })
         })
@@ -134,7 +139,6 @@ class Play extends Component {
 
             stories.forEach(s => {
                 if(!s[this.state.values[this.state.stage]]) {
-                    console.log('false')
                     allSubmitted = false
                 }
             })
